@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Authentication - ユーザー登録とログイン</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.7.0/firebase-firestore.js"></script>
+</head>
+<body>
+
+  <h2>ユーザー登録</h2>
+  <label for="register-email">メールアドレス:</label>
+  <input type="email" id="register-email" required>
+  <br><br>
+
+  <label for="register-password">パスワード:</label>
+  <input type="password" id="register-password" required>
+  <br><br>
+
+  <label for="register-team">チームを選んでください：</label>
+  <select id="register-team">
+    <option value="TeamA">チームA</option>
+    <option value="TeamB">チームB</option>
+  </select>
+  <br><br>
+
+  <button onclick="register()">アカウント作成</button>
+
+  <h2>ログイン</h2>
+  <label for="login-email">メールアドレス:</label>
+  <input type="email" id="login-email" required>
+  <br><br>
+
+  <label for="login-password">パスワード:</label>
+  <input type="password" id="login-password" required>
+  <br><br>
+
+  <button onclick="login()">ログイン</button>
+
+  <script>
+    // Firebaseの設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQGB-KphFVehOwyGtgSiOrckeauDRAgKw",
+      authDomain: "jindori-kansai.firebaseapp.com",
+      databaseURL: "https://jindori-kansai-default-rtdb.firebaseio.com",
+      projectId: "jindori-kansai",
+      storageBucket: "jindori-kansai.firebasestorage.app",
+      messagingSenderId: "773674958488",
+      appId: "1:773674958488:web:3ac4f2819be8b6cc9d5aed"
+    };
+
+    // Firebaseを初期化
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ユーザー登録処理
+    function register() {
+      const email = document.getElementById("register-email").value;
+      const password = document.getElementById("register-password").value;
+      const team = document.getElementById("register-team").value;
+
+      // Firebase Authentication で新規ユーザーを作成
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log("ユーザー登録成功:", user);
+
+          // ユーザー情報をFirestoreに保存
+          db.collection("users").doc(user.uid).set({
+            team: team,
+            email: email
+          })
+          .then(() => {
+            console.log("ユーザー情報がFirestoreに保存されました");
+            alert("アカウント作成成功！");
+            // ホーム画面に遷移する処理など
+            window.location.href = "/home.html"; // 例: ホーム画面に遷移
+          })
+          .catch((error) => {
+            console.error("Firestoreへの保存エラー:", error);
+            alert("ユーザー情報の保存に失敗しました");
+          });
+
+        })
+        .catch((error) => {
+          // エラーハンドリング
+          console.error("登録エラー:", error);
+          alert("登録失敗: " + error.message);
+        });
+    }
+
+    // ログイン処理
+    function login() {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log("ログイン成功:", user);
+
+          // ユーザーの所属チーム情報を取得
+          db.collection("users").doc(user.uid).get()
+            .then((doc) => {
+              if (doc.exists) {
+                const team = doc.data().team;
+                console.log("所属チーム:", team);
+                alert("ログイン成功！所属チーム: " + team);
+                // ホーム画面に遷移
+                window.location.href = "/home.html";
+              } else {
+                console.log("ユーザー情報が見つかりません");
+                alert("ユーザー情報が見つかりません");
+              }
+            })
+            .catch((error) => {
+              console.error("ユーザー情報取得エラー:", error);
+              alert("ユーザー情報取得に失敗しました");
+            });
+
+        })
+        .catch((error) => {
+          console.error("ログインエラー:", error);
+          alert("ログイン失敗: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>
