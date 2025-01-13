@@ -1,133 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Firebase Authentication - ユーザー登録とログイン</title>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.7.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.7.0/firebase-firestore.js"></script>
-</head>
-<body>
-
-  <h2>ユーザー登録</h2>
-  <label for="register-email">メールアドレス:</label>
-  <input type="email" id="register-email" required>
-  <br><br>
-
-  <label for="register-password">パスワード:</label>
-  <input type="password" id="register-password" required>
-  <br><br>
-
-  <label for="register-team">チームを選んでください：</label>
-  <select id="register-team">
-    <option value="TeamA">チームA</option>
-    <option value="TeamB">チームB</option>
-  </select>
-  <br><br>
-
-  <button onclick="register()">アカウント作成</button>
-
-  <h2>ログイン</h2>
-  <label for="login-email">メールアドレス:</label>
-  <input type="email" id="login-email" required>
-  <br><br>
-
-  <label for="login-password">パスワード:</label>
-  <input type="password" id="login-password" required>
-  <br><br>
-
-  <button onclick="login()">ログイン</button>
-
+  <title>ログインページ</title>
+  <!-- Firebase SDKの読み込み -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
   <script>
     // Firebaseの設定
     const firebaseConfig = {
       apiKey: "AIzaSyBQGB-KphFVehOwyGtgSiOrckeauDRAgKw",
       authDomain: "jindori-kansai.firebaseapp.com",
-      databaseURL: "https://jindori-kansai-default-rtdb.firebaseio.com",
       projectId: "jindori-kansai",
-      storageBucket: "jindori-kansai.firebasestorage.app",
+      storageBucket: "jindori-kansai.appspot.com",
       messagingSenderId: "773674958488",
       appId: "1:773674958488:web:3ac4f2819be8b6cc9d5aed"
     };
 
-    // Firebaseを初期化
+    // Firebaseの初期化
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
 
-    // ユーザー登録処理
-    function register() {
-      const email = document.getElementById("register-email").value;
-      const password = document.getElementById("register-password").value;
-      const team = document.getElementById("register-team").value;
+    // アカウント作成
+    async function register() {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
 
-      // Firebase Authentication で新規ユーザーを作成
-      auth.createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log("ユーザー登録成功:", user);
-
-          // ユーザー情報をFirestoreに保存
-          db.collection("users").doc(user.uid).set({
-            team: team,
-            email: email
-          })
-          .then(() => {
-            console.log("ユーザー情報がFirestoreに保存されました");
-            alert("アカウント作成成功！");
-            // ホーム画面に遷移する処理など
-            window.location.href = "/home.html"; // 例: ホーム画面に遷移
-          })
-          .catch((error) => {
-            console.error("Firestoreへの保存エラー:", error);
-            alert("ユーザー情報の保存に失敗しました");
-          });
-
-        })
-        .catch((error) => {
-          // エラーハンドリング
-          console.error("登録エラー:", error);
-          alert("登録失敗: " + error.message);
-        });
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        alert('アカウント作成成功！');
+        console.log('ユーザー作成:', userCredential.user);
+      } catch (error) {
+        alert('エラー: ' + error.message);
+      }
     }
 
-    // ログイン処理
-    function login() {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
+    // ログイン
+    async function login() {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          console.log("ログイン成功:", user);
-
-          // ユーザーの所属チーム情報を取得
-          db.collection("users").doc(user.uid).get()
-            .then((doc) => {
-              if (doc.exists) {
-                const team = doc.data().team;
-                console.log("所属チーム:", team);
-                alert("ログイン成功！所属チーム: " + team);
-                // ホーム画面に遷移
-                window.location.href = "/home.html";
-              } else {
-                console.log("ユーザー情報が見つかりません");
-                alert("ユーザー情報が見つかりません");
-              }
-            })
-            .catch((error) => {
-              console.error("ユーザー情報取得エラー:", error);
-              alert("ユーザー情報取得に失敗しました");
-            });
-
-        })
-        .catch((error) => {
-          console.error("ログインエラー:", error);
-          alert("ログイン失敗: " + error.message);
-        });
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        alert('ログイン成功！');
+        console.log('ログイン成功:', userCredential.user);
+        window.location.href = "home.html"; // ログイン後にホーム画面へ遷移
+      } catch (error) {
+        alert('エラー: ' + error.message);
+      }
     }
+
+    // ページ読み込み時に現在のユーザー状態をチェック
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        console.log('現在ログイン中のユーザー:', user);
+        // ユーザーがログインしている場合の処理
+      } else {
+        console.log('ログインしていません');
+        // ユーザーがログインしていない場合の処理
+      }
+    });
   </script>
+</head>
+<body>
+  <h1>ログインページ</h1>
+  <div>
+    <label for="emailInput">メールアドレス:</label>
+    <input type="email" id="emailInput" required>
+  </div>
+  <div>
+    <label for="passwordInput">パスワード:</label>
+    <input type="password" id="passwordInput" required>
+  </div>
+  <button onclick="register()">アカウント作成</button>
+  <button onclick="login()">ログイン</button>
 </body>
 </html>
