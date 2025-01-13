@@ -1,79 +1,110 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ログインページ</title>
-  <!-- Firebase SDKの読み込み -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-  <script>
-    // Firebaseの設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyBQGB-KphFVehOwyGtgSiOrckeauDRAgKw",
-      authDomain: "jindori-kansai.firebaseapp.com",
-      projectId: "jindori-kansai",
-      storageBucket: "jindori-kansai.appspot.com",
-      messagingSenderId: "773674958488",
-      appId: "1:773674958488:web:3ac4f2819be8b6cc9d5aed"
-    };
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン / アカウント作成</title>
 
-    // Firebaseの初期化
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    <!-- Firebase SDKの読み込み -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 
-    // アカウント作成
-    async function register() {
-      const email = document.getElementById('emailInput').value;
-      const password = document.getElementById('passwordInput').value;
+    <!-- Firebase設定 -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQGB-KphFVehOwyGtgSiOrckeauDRAgKw",
+            authDomain: "jindori-kansai.firebaseapp.com",
+            projectId: "jindori-kansai",
+            storageBucket: "jindori-kansai.firebasestorage.app",
+            messagingSenderId: "773674958488",
+            appId: "1:773674958488:web:3ac4f2819be8b6cc9d5aed"
+        };
 
-      try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        alert('アカウント作成成功！');
-        console.log('ユーザー作成:', userCredential.user);
-      } catch (error) {
-        alert('エラー: ' + error.message);
-      }
-    }
-
-    // ログイン
-    async function login() {
-      const email = document.getElementById('emailInput').value;
-      const password = document.getElementById('passwordInput').value;
-
-      try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        alert('ログイン成功！');
-        console.log('ログイン成功:', userCredential.user);
-        window.location.href = "home.html"; // ログイン後にホーム画面へ遷移
-      } catch (error) {
-        alert('エラー: ' + error.message);
-      }
-    }
-
-    // ページ読み込み時に現在のユーザー状態をチェック
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        console.log('現在ログイン中のユーザー:', user);
-        // ユーザーがログインしている場合の処理
-      } else {
-        console.log('ログインしていません');
-        // ユーザーがログインしていない場合の処理
-      }
-    });
-  </script>
+        // Firebase初期化
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+    </script>
 </head>
 <body>
-  <h1>ログインページ</h1>
-  <div>
-    <label for="emailInput">メールアドレス:</label>
-    <input type="email" id="emailInput" required>
-  </div>
-  <div>
-    <label for="passwordInput">パスワード:</label>
-    <input type="password" id="passwordInput" required>
-  </div>
-  <button onclick="register()">アカウント作成</button>
-  <button onclick="login()">ログイン</button>
+    <h1>ログイン / アカウント作成</h1>
+
+    <!-- アカウント作成フォーム -->
+    <h2>アカウント作成</h2>
+    <form id="signup-form">
+        <label for="signup-email">メールアドレス:</label>
+        <input type="email" id="signup-email" required><br><br>
+
+        <label for="signup-password">パスワード:</label>
+        <input type="password" id="signup-password" required><br><br>
+
+        <button type="submit">アカウント作成</button>
+    </form>
+
+    <br><hr><br>
+
+    <!-- ログインフォーム -->
+    <h2>ログイン</h2>
+    <form id="login-form">
+        <label for="login-email">メールアドレス:</label>
+        <input type="email" id="login-email" required><br><br>
+
+        <label for="login-password">パスワード:</label>
+        <input type="password" id="login-password" required><br><br>
+
+        <button type="submit">ログイン</button>
+    </form>
+
+    <p id="error-message" style="color: red;"></p>
+
+    <script>
+        // アカウント作成フォームの送信イベントを処理
+        document.getElementById("signup-form").addEventListener("submit", function(event) {
+            event.preventDefault();  // フォームのデフォルトの送信を防止
+
+            // 入力されたメールアドレスとパスワードを取得
+            const email = document.getElementById("signup-email").value;
+            const password = document.getElementById("signup-password").value;
+
+            // Firebase Authenticationでアカウント作成処理
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // アカウント作成成功時
+                    const user = userCredential.user;
+                    alert('アカウント作成成功！ログインして下さい。');
+                    document.getElementById("signup-form").reset();  // フォームをリセット
+                })
+                .catch((error) => {
+                    // アカウント作成失敗時
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    document.getElementById("error-message").textContent = "エラー: " + errorMessage;
+                });
+        });
+
+        // ログインフォームの送信イベントを処理
+        document.getElementById("login-form").addEventListener("submit", function(event) {
+            event.preventDefault();  // フォームのデフォルトの送信を防止
+
+            // 入力されたメールアドレスとパスワードを取得
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+
+            // Firebase Authenticationでログイン処理
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // ログイン成功時
+                    const user = userCredential.user;
+                    document.getElementById("error-message").textContent = '';  // エラーメッセージをクリア
+                    alert('ログイン成功！');
+                    window.location.href = "home.html";  // ログイン成功後、ホーム画面に遷移（仮のページ）
+                })
+                .catch((error) => {
+                    // ログイン失敗時
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    document.getElementById("error-message").textContent = "エラー: " + errorMessage;  // エラーメッセージを表示
+                });
+        });
+    </script>
 </body>
 </html>
